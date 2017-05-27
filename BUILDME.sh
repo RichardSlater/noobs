@@ -112,7 +112,7 @@ SKIP_KERNEL_REBUILD=0
 for i in $*; do
     # Update raspberrypi/firmware master HEAD version in package/rpi-firmware/rpi-firmware.mk to latest
     if [ $i = "update-firmware" ]; then
-        update_github_package_version rpi-firmware raspberrypi/firmware master
+        update_github_package_version rpi-firmware raspberrypi/firmware stable
     fi
 
     # Update raspberrypi/userland master HEAD version in package/rpi-userland/rpi-userland.mk to latest
@@ -122,7 +122,7 @@ for i in $*; do
 
     # Update raspberrypi/linux rpi-4.1.y HEAD version in buildroot/.config to latest
     if [ $i = "update-kernel" ]; then
-        update_github_kernel_version raspberrypi/linux rpi-4.1.y
+        update_github_kernel_version raspberrypi/linux rpi-4.4.y
     fi
 
     # Option to build just recovery without completely rebuilding both kernels
@@ -150,13 +150,13 @@ if [ $SKIP_KERNEL_REBUILD -ne 1 ]; then
     select_kernelconfig armv7
     make linux-reconfigure
     # copy ARMv7 kernel
-    package/rpi-firmware/mkknlimg "$IMAGES_DIR/zImage" "$FINAL_OUTPUT_DIR/recovery7.img"
+    cp "$IMAGES_DIR/zImage" "$FINAL_OUTPUT_DIR/recovery7.img"
 
     # Rebuild kernel for ARMv6
     select_kernelconfig armv6
     make linux-reconfigure
     # copy ARMv6 kernel
-    package/rpi-firmware/mkknlimg "$IMAGES_DIR/zImage" "$FINAL_OUTPUT_DIR/recovery.img"
+    cp "$IMAGES_DIR/zImage" "$FINAL_OUTPUT_DIR/recovery.img"
 else
     echo "Warning: kernels in '$NOOBS_OUTPUT_DIR' directory haven't been updated"
 fi
@@ -175,7 +175,7 @@ touch "$FINAL_OUTPUT_DIR/RECOVERY_FILES_DO_NOT_EDIT"
 # Create build-date timestamp file containing Git HEAD info for build
 BUILD_INFO="$FINAL_OUTPUT_DIR/BUILD-DATA"
 echo "Build-date: $(date +"%Y-%m-%d")" > "$BUILD_INFO"
-echo "NOOBS Version: $(git describe)" >> "$BUILD_INFO"
+echo "NOOBS Version: $(sed -n 's|.*VERSION_NUMBER.*\"\(.*\)\"|v\1|p' ../recovery/config.h)" >> "$BUILD_INFO"
 echo "NOOBS Git HEAD @ $(git rev-parse --verify HEAD)" >> "$BUILD_INFO"
 echo "rpi-userland Git master @ $(get_package_version rpi-userland)" >> "$BUILD_INFO"
 echo "rpi-firmware Git master @ $(get_package_version rpi-firmware)" >> "$BUILD_INFO"
